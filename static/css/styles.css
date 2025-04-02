@@ -1,0 +1,12 @@
+body {
+    background-color: #f8f9fa;
+}
+
+.container-lg {
+    max-width: 1140px;
+}
+
+.form-control:focus {
+    border-color: #495057;
+    box-shadow: 0 0 0 0.2rem rgba(73, 80, 87, 0.25);
+}
