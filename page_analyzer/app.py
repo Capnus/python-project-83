@@ -1,14 +1,15 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
-from datetime import datetime
-import validators
 import os
-from dotenv import load_dotenv
-from .db import get_connection, normalize_url
+
 import psycopg2
-from psycopg2.extras import NamedTupleCursor
 import requests
-from requests.exceptions import RequestException
+import validators
 from bs4 import BeautifulSoup
+from dotenv import load_dotenv
+from flask import Flask, flash, redirect, render_template, request, url_for
+from psycopg2.extras import NamedTupleCursor
+from requests.exceptions import RequestException
+
+from .db import get_connection, normalize_url
 
 load_dotenv()
 
@@ -72,7 +73,7 @@ def check_url(id):
         try:
             response = requests.get(
                 url,
-                timeout=10,               
+                timeout=10, 
             )
             response.encoding = 'utf-8'
             response.raise_for_status()
@@ -83,10 +84,18 @@ def check_url(id):
             h1 = h1.text.strip().encode('utf-8').decode('utf-8') if h1 else None
             
             title = soup.find('title')
-            title = title.text.strip().encode('utf-8').decode('utf-8') if title else None
-            
+            title = (
+                title.text.strip().encode('utf-8').decode('utf-8') 
+                if title 
+                else None
+            )
+
             description = soup.find('meta', attrs={'name': 'description'})
-            description = description['content'].strip().encode('utf-8').decode('utf-8') if description else None
+            description = (
+                description['content'].strip().encode('utf-8').decode('utf-8') 
+                if description 
+                else None
+            )
             
             with get_connection() as conn:
                 with conn.cursor(cursor_factory=NamedTupleCursor) as cursor:
@@ -124,12 +133,14 @@ def page_not_found(error):
     except:
         return "Страница не найдена", 404
 
+
 @app.errorhandler(500)
 def server_error(error):
     try:
         return render_template('errors/500.html'), 500
     except:
         return "Внутренняя ошибка сервера", 500
+
 
 def init_db():
     with app.app_context():
@@ -143,7 +154,9 @@ def init_db():
                     conn.commit()
                     print("Database tables created successfully")
 
+
 init_db()
+
 
 @app.route('/urls')
 def show_urls():
@@ -168,6 +181,7 @@ def show_urls():
             urls = cursor.fetchall()
     return render_template('urls/index.html', urls=urls)
 
+
 @app.route('/urls/<int:id>')
 def show_url(id):  
     with get_connection() as conn:
@@ -176,8 +190,13 @@ def show_url(id):
             url = cursor.fetchone()
             
             cursor.execute(
-                "SELECT * FROM url_checks WHERE url_id = %s ORDER BY created_at DESC",
-                (id,)
+                """
+                SELECT * 
+                FROM url_checks 
+                WHERE url_id = %s 
+                ORDER BY created_at DESC
+                """,
+            (id,)
             )
             checks = cursor.fetchall()
     
