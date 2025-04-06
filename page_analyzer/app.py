@@ -105,7 +105,6 @@ def check_url(id):
                         VALUES (%s, %s, %s, %s, %s) RETURNING id""",
                         (id, response.status_code, h1, title, description)
                     )
-                    check_id = cursor.fetchone().id
                     
                     cursor.execute(
                         "UPDATE urls SET created_at = NOW() WHERE id = %s",
@@ -130,7 +129,7 @@ def check_url(id):
 def page_not_found(error):
     try:
         return render_template('errors/404.html'), 404
-    except:
+    except Exception:
         return "Страница не найдена", 404
 
 
@@ -138,7 +137,7 @@ def page_not_found(error):
 def server_error(error):
     try:
         return render_template('errors/500.html'), 500
-    except:
+    except Exception:
         return "Внутренняя ошибка сервера", 500
 
 
