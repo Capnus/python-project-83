@@ -5,7 +5,7 @@
     <h1>Сайты</h1>
     
     <div class="table-responsive">
-        <table class="table table-bordered table-hover text-nowrap" data-test="urls">
+        <table class="table table-bordered table-hover text-nowrap">
             <thead>
                 <tr>
                     <th>ID</th>
@@ -22,15 +22,11 @@
                     <td>
                         {% if url.last_check %}
                             {{ url.last_check.strftime('%Y-%m-%d') }}
-                        {% else %}
-                            —
                         {% endif %}
                     </td>
                     <td>
                         {% if url.last_status_code %}
                             {{ url.last_status_code }}
-                        {% else %}
-                            —
                         {% endif %}
                     </td>
                 </tr>

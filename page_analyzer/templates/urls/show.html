@@ -22,13 +22,13 @@
             </tbody>
         </table>
     </div>
-    
+
     <h2 class="mt-5 mb-3">Проверки</h2>
     <form method="post" action="{{ url_for('check_url', id=url.id) }}">
         <input type="submit" class="btn btn-primary" value="Запустить проверку">
     </form>
     
-    <div>
+    <div class="table-responsive">
         <table class="table table-bordered table-hover mt-2" data-test="checks">
             <thead>
                 <tr>
@@ -37,17 +37,17 @@
                     <th>h1</th>
                     <th>title</th>
                     <th>description</th>
-                    <th>Дата создания</th>
+                    <th>Дата проверки</th>
                 </tr>
             </thead>
             <tbody>
                 {% for check in checks %}
                 <tr>
                     <td>{{ check.id }}</td>
-                    <td>{{ check.status_code if check.status_code else '' }}</td>
-                    <td>{{ check.h1 if check.h1 else '' }}</td>
-                    <td>{{ check.title if check.title else '' }}</td>
-                    <td>{{ check.description if check.description else '' }}</td>
+                    <td>{{ check.status_code if check.status_code }}</td>
+                    <td>{{ check.h1 if check.h1 }}</td>
+                    <td>{{ check.title if check.title }}</td>
+                    <td>{{ check.description if check.description }}</td>
                     <td>{{ check.created_at.strftime('%Y-%m-%d') }}</td>
                 </tr>
                 {% endfor %}
