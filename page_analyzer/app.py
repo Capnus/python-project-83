@@ -6,6 +6,9 @@ from dotenv import load_dotenv
 from .db import get_connection, normalize_url
 import psycopg2
 from psycopg2.extras import NamedTupleCursor
+import requests
+from requests.exceptions import RequestException
+from bs4 import BeautifulSoup
 
 load_dotenv()
 
@@ -53,62 +56,64 @@ def add_url():
                 return redirect(url_for('show_url', id=url_id))
 
 
-@app.route('/urls')
-def show_urls():
-    with get_connection() as conn:
-        with conn.cursor(cursor_factory=NamedTupleCursor) as cursor:
-            cursor.execute("""
-                SELECT 
-                    urls.id, 
-                    urls.name, 
-                    urls.created_at,
-                    url_checks.created_at as last_check,
-                    url_checks.status_code as last_status_code
-                FROM urls
-                LEFT JOIN url_checks ON urls.id = url_checks.url_id
-                AND url_checks.id = (
-                    SELECT MAX(id) 
-                    FROM url_checks 
-                    WHERE url_checks.url_id = urls.id
-                )
-                ORDER BY urls.created_at DESC
-            """)
-            urls = cursor.fetchall()
-    return render_template('urls/index.html', urls=urls)
-
-
-@app.route('/urls/<int:id>')
-def show_url(id):
-    with get_connection() as conn:
-        with conn.cursor(cursor_factory=NamedTupleCursor) as cursor:
-            cursor.execute("SELECT * FROM urls WHERE id = %s", (id,))
-            url = cursor.fetchone()
-            
-            cursor.execute(
-                "SELECT * FROM url_checks WHERE url_id = %s ORDER BY created_at DESC",
-                (id,)
-            )
-            checks = cursor.fetchall()
-    
-    return render_template('urls/show.html', url=url, checks=checks)
-
-
 @app.post('/urls/<int:id>/checks')
 def check_url(id):
-    with get_connection() as conn:
-        with conn.cursor(cursor_factory=NamedTupleCursor) as cursor:
-            cursor.execute(
-                "INSERT INTO url_checks (url_id) VALUES (%s) RETURNING id",
-                (id,)
+    try:
+        with get_connection() as conn:
+            with conn.cursor(cursor_factory=NamedTupleCursor) as cursor:
+                cursor.execute("SELECT name FROM urls WHERE id = %s", (id,))
+                url_record = cursor.fetchone()
+                if not url_record:
+                    flash('Сайт не найден', 'danger')
+                    return redirect(url_for('show_urls'))
+                
+                url = url_record.name
+
+        try:
+            response = requests.get(
+                url,
+                timeout=10,               
             )
-            check_id = cursor.fetchone().id
+            response.encoding = 'utf-8'
+            response.raise_for_status()
             
-            cursor.execute(
-                "UPDATE urls SET created_at = NOW() WHERE id = %s",
-                (id,)
-            )
+            soup = BeautifulSoup(response.text, 'html.parser')
+            
+            h1 = soup.find('h1')
+            h1 = h1.text.strip().encode('utf-8').decode('utf-8') if h1 else None
+            
+            title = soup.find('title')
+            title = title.text.strip().encode('utf-8').decode('utf-8') if title else None
+            
+            description = soup.find('meta', attrs={'name': 'description'})
+            description = description['content'].strip().encode('utf-8').decode('utf-8') if description else None
+            
+            with get_connection() as conn:
+                with conn.cursor(cursor_factory=NamedTupleCursor) as cursor:
+                    cursor.execute(
+                        """INSERT INTO url_checks 
+                        (url_id, status_code, h1, title, description) 
+                        VALUES (%s, %s, %s, %s, %s) RETURNING id""",
+                        (id, response.status_code, h1, title, description)
+                    )
+                    check_id = cursor.fetchone().id
+                    
+                    cursor.execute(
+                        "UPDATE urls SET created_at = NOW() WHERE id = %s",
+                        (id,)
+                    )
+            
+            flash('Страница успешно проверена', 'success')
+        
+        except RequestException as e:
+            flash('Произошла ошибка при проверке', 'danger')
+            app.logger.error(f"Request failed for URL {url}: {str(e)}")
+            return redirect(url_for('show_url', id=id))
     
-    flash('Страница успешно проверена', 'success')
+    except Exception as e:
+        flash('Произошла внутренняя ошибка', 'danger')
+        app.logger.error(f"Error checking URL: {str(e)}")
+    
     return redirect(url_for('show_url', id=id))
 
 
@@ -139,3 +144,41 @@ def init_db():
                     print("Database tables created successfully")
 
 init_db()
+
+@app.route('/urls')
+def show_urls():
+    with get_connection() as conn:
+        with conn.cursor(cursor_factory=NamedTupleCursor) as cursor:
+            cursor.execute("""
+                SELECT 
+                    urls.id, 
+                    urls.name, 
+                    urls.created_at,
+                    url_checks.created_at as last_check,
+                    url_checks.status_code as last_status_code
+                FROM urls
+                LEFT JOIN url_checks ON urls.id = url_checks.url_id
+                AND url_checks.id = (
+                    SELECT MAX(id) 
+                    FROM url_checks 
+                    WHERE url_checks.url_id = urls.id
+                )
+                ORDER BY urls.created_at DESC
+            """)
+            urls = cursor.fetchall()
+    return render_template('urls/index.html', urls=urls)
+
+@app.route('/urls/<int:id>')
+def show_url(id):  
+    with get_connection() as conn:
+        with conn.cursor(cursor_factory=NamedTupleCursor) as cursor:
+            cursor.execute("SELECT * FROM urls WHERE id = %s", (id,))
+            url = cursor.fetchone()
+            
+            cursor.execute(
+                "SELECT * FROM url_checks WHERE url_id = %s ORDER BY created_at DESC",
+                (id,)
+            )
+            checks = cursor.fetchall()
+    
+    return render_template('urls/show.html', url=url, checks=checks)
