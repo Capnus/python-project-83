@@ -18,7 +18,7 @@
 
 #### Clone the repository:
 ```
-git clone https://github.com/AlishaEvergreen/python-project-83.git page-analyzer
+git clone git@github.com:Capnus/python-project-83.git
 ```
 
 #### Install dependencies and set up the project: 
