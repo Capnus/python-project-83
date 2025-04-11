@@ -6,11 +6,15 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-DATABASE_URL = os.getenv('DATABASE_URL')
-
 
 def get_connection():
-    return psycopg2.connect(DATABASE_URL)
+    # Проверяем, что DATABASE_URL загружен
+    database_url = os.getenv("DATABASE_URL")
+    if not database_url:
+        raise ValueError("DATABASE_URL не найден в переменных окружения!")
+    
+    # Подключаемся с SSL (обязательно для Render)
+    return psycopg2.connect(database_url, sslmode="require")
 
 
 def normalize_url(url):
