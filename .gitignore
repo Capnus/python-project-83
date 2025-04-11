@@ -7,3 +7,5 @@ dist/
 coverage.xml
 *_cache/
 .env
+get.sh
+tests/** 
