@@ -1,6 +1,10 @@
 ### Hexlet tests and linter status:
 [![Actions Status](https://github.com/Capnus/python-project-83/actions/workflows/hexlet-check.yml/badge.svg)](https://github.com/Capnus/python-project-83/actions)
 
+### [![Maintainability](https://qlty.sh/badges/115d720b-e8ab-4efe-a7b8-e91ded5b26cf/maintainability.svg)](https://qlty.sh/gh/Capnus/projects/python-project-83)
+
+### [![Code Coverage](https://qlty.sh/badges/115d720b-e8ab-4efe-a7b8-e91ded5b26cf/test_coverage.svg)](https://qlty.sh/gh/Capnus/projects/python-project-83)
+
 
 ### Page Analyzer
 
