@@ -3,8 +3,6 @@
 
 ### [![Maintainability](https://qlty.sh/badges/115d720b-e8ab-4efe-a7b8-e91ded5b26cf/maintainability.svg)](https://qlty.sh/gh/Capnus/projects/python-project-83)
 
-### [![Code Coverage](https://qlty.sh/badges/115d720b-e8ab-4efe-a7b8-e91ded5b26cf/test_coverage.svg)](https://qlty.sh/gh/Capnus/projects/python-project-83)
-
 
 ### Page Analyzer
 
