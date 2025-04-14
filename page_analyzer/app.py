@@ -17,6 +17,36 @@ app = Flask(__name__, static_folder='static')
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 
 
+def init_db():
+    with get_connection() as conn:
+        with conn.cursor() as cursor:
+            try:
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS urls (
+                        id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+                        name varchar(255) UNIQUE NOT NULL,
+                        created_at timestamp DEFAULT CURRENT_TIMESTAMP
+                    );
+                    
+                    CREATE TABLE IF NOT EXISTS url_checks (
+                        id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+                        url_id bigint REFERENCES urls (id) ON DELETE CASCADE,
+                        status_code int,
+                        h1 varchar(255),
+                        title varchar(255),
+                        description text,
+                        created_at timestamp DEFAULT CURRENT_TIMESTAMP
+                    );
+                """)
+                conn.commit()
+            except psycopg2.Error as e:
+                conn.rollback()
+                print(f"Database initialization error: {e}")
+
+
+init_db()
+
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -139,21 +169,6 @@ def server_error(error):
         return render_template('errors/500.html'), 500
     except Exception:
         return "Внутренняя ошибка сервера", 500
-
-
-def init_db():
-    with get_connection() as conn:
-        with conn.cursor() as cursor:
-            try:
-                with open(os.path.join(os.path.dirname(__file__), 'schema.sql'), 'r') as f:
-                    cursor.execute(f.read())
-                conn.commit()
-            except psycopg2.Error as e:
-                conn.rollback()
-                print(f"Database initialization error: {e}")
-
-
-init_db()
 
 
 @app.route('/urls')
