@@ -153,3 +153,49 @@ def show_url(id):
             checks = cursor.fetchall()
     
     return render_template('urls/show.html', url=url, checks=checks)
+
+
+@app.post('/urls/<int:id>/checks')
+def check_url(id):
+    try:
+        with get_connection() as conn:
+            with conn.cursor(cursor_factory=NamedTupleCursor) as cursor:
+                cursor.execute("SELECT name FROM urls WHERE id = %s", (id,))
+                url_record = cursor.fetchone()
+                if not url_record:
+                    flash('Сайт не найден', 'danger')
+                    return redirect(url_for('show_urls'))
+                
+                url = url_record.name
+
+                try:
+                    response = requests.get(url, timeout=10)
+                    response.raise_for_status()
+                    
+                    soup = BeautifulSoup(response.text, 'html.parser')
+                    
+                    h1 = soup.h1.get_text().strip() if soup.h1 else ''
+                    title = soup.title.string.strip() if soup.title else ''
+                    description_tag = soup.find('meta', attrs={'name': 'description'})
+                    description = description_tag['content'].strip() if description_tag else ''
+                    
+                    cursor.execute(
+                        """INSERT INTO url_checks 
+                        (url_id, status_code, h1, title, description) 
+                        VALUES (%s, %s, %s, %s, %s)""",
+                        (id, response.status_code, h1, title, description)
+                    )
+                    conn.commit()
+                    
+                    flash('Страница успешно проверена', 'success')
+                except RequestException as e:
+                    conn.rollback()
+                    flash('Произошла ошибка при проверке', 'danger')
+                    app.logger.error(f"Request failed for URL {url}: {str(e)}")
+                
+                return redirect(url_for('show_url', id=id))
+    
+    except Exception as e:
+        flash('Произошла внутренняя ошибка', 'danger')
+        app.logger.error(f"Error checking URL: {str(e)}")
+        return redirect(url_for('show_urls'))

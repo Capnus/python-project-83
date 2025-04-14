@@ -25,11 +25,12 @@
 
     <h2 class="mt-5 mb-3">Проверки</h2>
     <form method="post" action="{{ url_for('check_url', id=url.id) }}">
-        <input type="submit" class="btn btn-primary" value="Запустить проверку">
+        <input type="submit" class="btn btn-primary" value="Запустить проверку" data-test="check-button">
     </form>
     
-    <div class="table-responsive">
-        <table class="table table-bordered table-hover mt-2" data-test="checks">
+    {% if checks %}
+    <div class="table-responsive mt-3">
+        <table class="table table-bordered table-hover" data-test="checks">
             <thead>
                 <tr>
                     <th>ID</th>
@@ -44,15 +45,18 @@
                 {% for check in checks %}
                 <tr>
                     <td>{{ check.id }}</td>
-                    <td>{{ check.status_code if check.status_code }}</td>
-                    <td>{{ check.h1 if check.h1 }}</td>
-                    <td>{{ check.title if check.title }}</td>
-                    <td>{{ check.description if check.description }}</td>
+                    <td>{{ check.status_code|default('', true) }}</td>
+                    <td>{{ check.h1|default('', true) }}</td>
+                    <td>{{ check.title|default('', true) }}</td>
+                    <td>{{ check.description|default('', true) }}</td>
                     <td>{{ check.created_at.strftime('%Y-%m-%d') }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
+    {% else %}
+    <p class="mt-3">Проверок пока нет</p>
+    {% endif %}
 </div>
 {% endblock %}
