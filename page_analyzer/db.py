@@ -12,7 +12,7 @@ def get_connection():
     if not database_url:
         raise ValueError("DATABASE_URL не найден в переменных окружения!")
     
-    return psycopg2.connect(database_url, sslmode="require")
+    return psycopg2.connect(database_url)
 
 
 def normalize_url(url):
