@@ -142,16 +142,15 @@ def server_error(error):
 
 
 def init_db():
-    with app.app_context():
-        with get_connection() as conn:
-            with conn.cursor() as cursor:
-                try:
-                    cursor.execute("SELECT 1 FROM urls LIMIT 1")
-                except psycopg2.Error:
-                    with open('database.sql') as f:
-                        cursor.execute(f.read())
-                    conn.commit()
-                    print("Database tables created successfully")
+    with get_connection() as conn:
+        with conn.cursor() as cursor:
+            try:
+                with open(os.path.join(os.path.dirname(__file__), 'schema.sql'), 'r') as f:
+                    cursor.execute(f.read())
+                conn.commit()
+            except psycopg2.Error as e:
+                conn.rollback()
+                print(f"Database initialization error: {e}")
 
 
 init_db()
