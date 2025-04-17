@@ -17,39 +17,16 @@ app = Flask(__name__, static_folder='static')
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 
 
-def init_db():
-    with get_connection() as conn:
-        with conn.cursor() as cursor:
-            try:
-                cursor.execute("""
-                    CREATE TABLE IF NOT EXISTS urls (
-                        id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-                        name varchar(255) UNIQUE NOT NULL,
-                        created_at timestamp DEFAULT CURRENT_TIMESTAMP
-                    );
-                    
-                    CREATE TABLE IF NOT EXISTS url_checks (
-                        id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-                        url_id bigint REFERENCES urls (id) ON DELETE CASCADE,
-                        status_code int,
-                        h1 varchar(255),
-                        title varchar(255),
-                        description text,
-                        created_at timestamp DEFAULT CURRENT_TIMESTAMP
-                    );
-                """)
-                conn.commit()
-            except psycopg2.Error as e:
-                conn.rollback()
-                print(f"Database initialization error: {e}")
-
-
-init_db()
-
-
-@app.route('/')
+@app.route("/")
 def index():
-    return render_template('index.html')
+    conn = get_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT * FROM urls LIMIT 10")
+            urls = cursor.fetchall()
+        return {"urls": urls}
+    finally:
+        conn.close()
 
 
 @app.post('/urls')
@@ -203,3 +180,7 @@ def check_url(id):
         flash('Произошла внутренняя ошибка', 'danger')
         app.logger.error(f"Error checking URL: {str(e)}")
         return redirect(url_for('show_url', id=id))
+
+
+if __name__ == "__main__":
+    app.run()
