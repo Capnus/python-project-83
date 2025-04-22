@@ -1,13 +1,11 @@
 import os
 
-import psycopg2
 import requests
 import validators
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 from flask import Flask, flash, redirect, render_template, request, url_for
 from psycopg2.extras import NamedTupleCursor
-from requests.exceptions import RequestException
 
 from .db import get_connection, normalize_url
 
@@ -152,8 +150,12 @@ def check_url(id):
                     
                     h1 = soup.h1.get_text().strip() if soup.h1 else None
                     title = soup.title.string.strip() if soup.title else None
-                    description = soup.find('meta', attrs={'name': 'description'})
-                    description = description['content'].strip() if description else None
+                    description = soup.find(
+                        'meta', 
+                        attrs={'name': 'description'}
+                    )
+                    description = (description['content'].strip() 
+                                if description else None)
                     
                     cursor.execute(
                         """INSERT INTO url_checks 

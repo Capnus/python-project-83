@@ -23,3 +23,5 @@ lint:
 
 lint-fix:
 	uv run ruff check --fix
+init-db:
+	python -m page_analyzer.db_init

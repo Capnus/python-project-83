@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS url_checks (
 );
 """
 
+
 def init_db():
     """Создает таблицы при первом запуске."""
     conn = None
@@ -32,3 +33,7 @@ def init_db():
     finally:
         if conn:
             conn.close()
+
+
+if __name__ == "__main__":
+    init_db()
