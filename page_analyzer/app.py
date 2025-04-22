@@ -24,7 +24,7 @@ def index():
         with conn.cursor() as cursor:
             cursor.execute("SELECT * FROM urls LIMIT 10")
             urls = cursor.fetchall()
-        return {"urls": urls}
+        return render_template('index.html', urls=urls)
     finally:
         conn.close()
 
